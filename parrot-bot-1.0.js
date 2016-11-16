@@ -9,6 +9,7 @@ Created By Matt Wenger */
 
 */
 
+var haiku = require("./lib/haiku.js");
 
 /*-------- Discord API ------------*/
 var Discord = require('discord.js');
@@ -43,29 +44,50 @@ bot.on('ready', () => {
     console.log('Jeff is ready!');
 });
 
-// Stores the chat message temporarily to add to MySQL //
-var chat_message = {};
-var word = [];
-var long = [];
-var short = [];
 
 /* listens for any responses */
 bot.on('message', (message) => {
     msg = message.content;
 
-    /* Prevents Jeff from entering his own messages into the database */
-    if (!msg.includes("!jeff") && (!msg.includes('bawk!'))) {
-        chat_message = {
-            word: getRandomWord(msg),
-            long_phrase: getLongPhrase(msg),
-            short_phrase: getShortPhrase(msg)
-        };
-        
-        /* inserts responses*/
-        con.query('INSERT INTO parrot_table SET ?', chat_message, function (err, res) {
-            if (err) throw err;
-            console.log('Last insert ID:', res.insertId);
-        });
+    wordCount = msg.split(' ');
+
+    var value = {
+        word: getRandomWord(msg)
+    };
+    var value2 = {
+        sentence: getShortPhrase(msg)
+    };
+    var value3 = {
+        sentence: getLongPhrase(msg)
+    };
+    
+
+    console.log("message length: ", wordCount.length);
+    if (wordCount.length <= 3) {
+        /* Prevents Jeff from entering his own messages into the database */
+        if (!msg.includes("!jeff") && (!msg.includes('bawk!') && (!msg[0].includes('!')))) {
+            con.query('INSERT INTO word_table SET ?', value, function (err, res) {
+                if (err) throw err;
+                console.log('Last insert ID:', res.insertId);
+            });
+        }
+    }
+    if (wordCount.length >= 3) {
+        /* Prevents Jeff from entering his own messages into the database */
+        if (!msg.includes("!jeff") && (!msg.includes('bawk!') && (!msg[0].includes('!')))) {
+            con.query('INSERT INTO short_phrase_table SET ?', value2, function (err, res) {
+                if (err) throw err;
+                console.log('Last insert ID:', res.insertId);
+            });
+        }
+    }
+    if (wordCount.length > 3) {
+        if (!msg.includes("!jeff") && (!msg.includes('bawk!') && (!msg[0].includes('!')))) {
+            con.query('INSERT INTO long_phrase_table SET ?', value3, function (err, res) {
+                if (err) throw err;
+                console.log('Last insert ID:', res.insertId);
+            });
+        }
     }
 });
 
@@ -92,27 +114,15 @@ bot.on("message", msg => {
     if (msg.content.startsWith(prefix + "jeff")) {
         msg.channel.sendMessage(getParrotMessage());
         /* wipe local lists */
-        
+
+    } else if (msg.content.startsWith(prefix + "haiku")) {
+        msg.channel.sendMessage(haiku.getHaikuTopic());
+        /* wipe local lists */
+
     } else {
         return;
     }
 });
-
-/* Prints and retrieves mySQL data */
-con.query('SELECT * FROM parrot_table', function (err, rows) {
-    if (err) throw err;
-
-    /* Add all SQL data into temp local data */
-    for (var i = 0; i < rows.length; i++) {
-        if (rows[i].word != '!jeff') {
-            
-            /* Push the table data to local memory */
-            word.push(rows[i].word);
-            long.push(rows[i].long_phrase);
-            short.push(rows[i].short_phrase);
-        }
-    }
-})
 
 /* Preps the message for long phrase SQL entry */
 function getLongPhrase(message) {
@@ -133,8 +143,8 @@ function getLongPhrase(message) {
                 longPhrase += ' ';
             }
         }
+        return longPhrase;
     }
-    return longPhrase;
 }
 
 /* Preps the message for short phrase SQL entry */
@@ -152,14 +162,13 @@ function getShortPhrase(message) {
                 shortPhrase += wordList[i];
             }
 
-
             /* If it's at the end of the word list do not add extra white space */
             if (i != (wordList.length - 1)) {
                 shortPhrase += ' ';
             }
         }
+        return shortPhrase;
     }
-    return shortPhrase;
 }
 
 /* Gets the word at the given location in a sentence ex. 0 for first word, 1, for second word in sentence .. etc */
@@ -179,28 +188,86 @@ function getRandomWord(message) {
 
 /* Needs to pull from MySQL */
 function getParrotMessage() {
-    return parrot_message;
-}
-function getParrotMessage() {
 
     /* [word] [word] [long_phrase] [short_phrase] [word] [word]*/
-    var parrot_message = "";
+    var parrot_message = '';
 
-    var length = Math.floor(Math.random() * 4) + 1;
+    var additionalWordLength = Math.floor(Math.random() * 3) + 1;
+    var additionalWordLength2 = Math.floor(Math.random() * 3) + 1;
+    var subPhrase = '';
+    var subPhrase2 = '';
 
-    /* Get random value from the list */
-    w = word[Math.floor(Math.random() * word.length)];
-    s = short[Math.floor(Math.random() * short.length)];
-    l = long[Math.floor(Math.random() * long.length)];
+    word = [];
+    long = [];
+    short= [];
 
-    // place holder //
-    parrot_message += w;
-    parrot_message += " ";
-    parrot_message += l;
-    parrot_message += " ";
-    parrot_message += s;
-    parrot_message += 'bawk!';
-    // fix later //
+    
+
+    con.query('SELECT * FROM word_table', function (err, rows) {
+        if (err) throw err;
+
+        /* Add all SQL data into temp local data */
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].word != '!jeff' && rows[i].word != null) {
+
+                /* Push the table data to local memory */
+                word.push(rows[i].word);
+    
+            }
+        }
+    });
+
+    con.query('SELECT * FROM long_phrase_table', function (err, rows) {
+        if (err) throw err;
+
+        /* Add all SQL data into temp local data */
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].sentence != '!jeff' && rows[i].sentence != null) {
+
+                /* Push the table data to local memory */
+                long.push(rows[i].sentence);
+                
+            }
+        }
+           
+    })
+
+    con.query('SELECT * FROM short_phrase_table', function (err, rows) {
+        if (err) throw err;
+
+        /* Add all SQL data into temp local data */
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].sentence != '!jeff' && rows[i].sentence != null) {
+
+                /* Push the table data to local memory */
+                short.push(rows[i].sentence);
+
+            }
+        }
+    });
+    console.log(word);
+    console.log(short);
+    console.log(long);
+   
+
+//     // /* Get random value from the list */
+//     w = word[Math.floor(Math.random() * word.length)];
+//     s = short[Math.floor(Math.random() * short.length)];
+//     l = long[Math.floor(Math.random() * long.length)];
+
+    
+//    // GET RID OF THIS LATER
+//     parrot_message += w;
+//     parrot_message +=" ";
+//     parrot_message += w;
+//     parrot_message +=" ";
+//     parrot_message += s;
+//     parrot_message +=" ";
+//     parrot_message += l;
+    parrot_message = 'hey fuckers';
+    
 
     return parrot_message;
 }
+
+
