@@ -9,6 +9,8 @@ Created By Matt Wenger */
 
 */
 
+var glob = '';
+
 var haiku = require("./lib/haiku.js");
 
 /*-------- Discord API ------------*/
@@ -60,7 +62,7 @@ bot.on('message', (message) => {
     var value3 = {
         sentence: getLongPhrase(msg)
     };
-    
+
 
     console.log("message length: ", wordCount.length);
     if (wordCount.length <= 3) {
@@ -185,6 +187,13 @@ function getRandomWord(message) {
     }
     return randomWord;
 }
+con.query("SELECT * FROM word_table", function (err, rows) {
+        if (err) {
+            throw err;
+        } else {
+            setValue(rows);
+        }
+    });
 
 /* Needs to pull from MySQL */
 function getParrotMessage() {
@@ -197,77 +206,58 @@ function getParrotMessage() {
     var subPhrase = '';
     var subPhrase2 = '';
 
-    word = [];
+    
     long = [];
-    short= [];
+    short = [];
+
 
     
-
-    con.query('SELECT * FROM word_table', function (err, rows) {
-        if (err) throw err;
-
-        /* Add all SQL data into temp local data */
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i].word != '!jeff' && rows[i].word != null) {
-
-                /* Push the table data to local memory */
-                word.push(rows[i].word);
-    
-            }
-        }
-    });
-
-    con.query('SELECT * FROM long_phrase_table', function (err, rows) {
-        if (err) throw err;
-
-        /* Add all SQL data into temp local data */
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i].sentence != '!jeff' && rows[i].sentence != null) {
-
-                /* Push the table data to local memory */
-                long.push(rows[i].sentence);
-                
-            }
-        }
-           
-    })
-
-    con.query('SELECT * FROM short_phrase_table', function (err, rows) {
-        if (err) throw err;
-
-        /* Add all SQL data into temp local data */
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i].sentence != '!jeff' && rows[i].sentence != null) {
-
-                /* Push the table data to local memory */
-                short.push(rows[i].sentence);
-
-            }
-        }
-    });
-    console.log(word);
     console.log(short);
     console.log(long);
+
+
+    //     // /* Get random value from the list */
    
+    //     s = short[Math.floor(Math.random() * short.length)];
+    //     l = long[Math.floor(Math.random() * long.length)];
 
-//     // /* Get random value from the list */
-//     w = word[Math.floor(Math.random() * word.length)];
-//     s = short[Math.floor(Math.random() * short.length)];
-//     l = long[Math.floor(Math.random() * long.length)];
 
+    //    // GET RID OF THIS LATER
+    //     parrot_message += w;
+    //     parrot_message +=" ";
+    //     parrot_message += w;
+    //     parrot_message +=" ";
+    //     parrot_message += s;
+    //     parrot_message +=" ";
+    //     parrot_message += l;
     
-//    // GET RID OF THIS LATER
-//     parrot_message += w;
-//     parrot_message +=" ";
-//     parrot_message += w;
-//     parrot_message +=" ";
-//     parrot_message += s;
-//     parrot_message +=" ";
-//     parrot_message += l;
-    parrot_message = 'hey fuckers';
+    wordList = [];
+    r = Math.floor(Math.random() * 3) + 1;
+    // working
+    for(var i = 0 ; i < glob.length; i++){
+        
+        console.log('global: ', glob[i].word);
+         wordList.push(glob[i].word);
+    }
+    console.log("word list: ", wordList);
     
+     w = wordList[Math.floor(Math.random() * wordList.length)];
 
+    parrot_message += w;
+    parrot_message += ' ';
+    parrot_message += 'bawk!';
     return parrot_message;
 }
+
+
+function setValue(value) {
+    glob = JSON.stringify(value);
+    var json =  JSON.parse(glob);
+    console.log(json);
+    glob = json;
+    console.log(value);
+}
+
+
 
 
