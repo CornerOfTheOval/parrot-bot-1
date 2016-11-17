@@ -9,7 +9,13 @@ Created By Matt Wenger */
 
 */
 
-var glob = '';
+var glob_word = '';
+var glob_long = '';
+var glob_short = '';
+
+wordList = [];
+wordLongList = [];
+wordShortList = [];
 
 var haiku = require("./lib/haiku.js");
 
@@ -117,6 +123,8 @@ bot.on("message", msg => {
         msg.channel.sendMessage(getParrotMessage());
         /* wipe local lists */
 
+        
+
     } else if (msg.content.startsWith(prefix + "haiku")) {
         msg.channel.sendMessage(haiku.getHaikuTopic());
         /* wipe local lists */
@@ -179,7 +187,7 @@ function getRandomWord(message) {
     var wordList = message.split(' ');
     var randomWord = '';
 
-    /* Choose a ranom word from the list */
+    /* Choose a random word from the list */
     for (var i = 0; i < wordList.length; i++) {
         if (randomWord[i] != "!jeff") {
             randomWord = wordList[Math.floor(Math.random() * wordList.length)];
@@ -187,13 +195,7 @@ function getRandomWord(message) {
     }
     return randomWord;
 }
-con.query("SELECT * FROM word_table", function (err, rows) {
-        if (err) {
-            throw err;
-        } else {
-            setValue(rows);
-        }
-    });
+
 
 /* Needs to pull from MySQL */
 function getParrotMessage() {
@@ -206,57 +208,116 @@ function getParrotMessage() {
     var subPhrase = '';
     var subPhrase2 = '';
 
-    
-    long = [];
-    short = [];
 
 
-    
-    console.log(short);
-    console.log(long);
 
+    //r = Math.floor(Math.random() * 3) + 1;
+    // word list
 
-    //     // /* Get random value from the list */
-   
-    //     s = short[Math.floor(Math.random() * short.length)];
-    //     l = long[Math.floor(Math.random() * long.length)];
+    for (var i = 0; i < glob_word.length; i++) {
 
-
-    //    // GET RID OF THIS LATER
-    //     parrot_message += w;
-    //     parrot_message +=" ";
-    //     parrot_message += w;
-    //     parrot_message +=" ";
-    //     parrot_message += s;
-    //     parrot_message +=" ";
-    //     parrot_message += l;
-    
-    wordList = [];
-    r = Math.floor(Math.random() * 3) + 1;
-    // working
-    for(var i = 0 ; i < glob.length; i++){
-        
-        console.log('global: ', glob[i].word);
-         wordList.push(glob[i].word);
+        //console.log('global: ', glob_word[i].word);
+        wordList.push(glob_word[i].word);
     }
-    console.log("word list: ", wordList);
-    
-     w = wordList[Math.floor(Math.random() * wordList.length)];
+    //console.log("word list: ", wordList);
 
+
+    r = Math.floor(Math.random() * 3) + 1;
+
+
+    // long word list
+
+    for (var i = 0; i < glob_long.length; i++) {
+
+        wordLongList.push(glob_long[i].sentence);
+    }
+
+
+    // short word list
+
+    for (var i = 0; i < glob_short.length; i++) {
+
+
+        wordShortList.push(glob_short[i].sentence);
+    }
+    console.log("word phrase list: ", wordList);
+    console.log("short phrase list: ", wordShortList);
+    console.log("long word list: ", wordLongList);
+
+    w = wordList[Math.floor(Math.random() * wordList.length)];
+    l = wordLongList[Math.floor(Math.random() * wordLongList.length)];
+    s = wordShortList[Math.floor(Math.random() * wordShortList.length)];
+
+
+    //constructs a message
     parrot_message += w;
+    parrot_message += ' ';
+    parrot_message += s;
+    parrot_message += ' ';
+    parrot_message += l;
     parrot_message += ' ';
     parrot_message += 'bawk!';
     return parrot_message;
 }
 
 
-function setValue(value) {
-    glob = JSON.stringify(value);
-    var json =  JSON.parse(glob);
-    console.log(json);
-    glob = json;
-    console.log(value);
+function setSQLWord(value) {
+
+    glob_word = '';
+    var str = JSON.stringify(value);
+    var json = JSON.parse(str);
+
+    glob_word = json;
+
 }
+
+function setSQLLong(value) {
+    glob_long = '';
+    var str = JSON.stringify(value);
+    var json = JSON.parse(str);
+
+    glob_long = json;
+
+}
+function setSQLShort(value) {
+    glob_short = '';
+    var str = JSON.stringify(value);
+    var json = JSON.parse(str);
+
+    glob_short = json;
+
+}
+
+/* Query for word_table */
+con.query("SELECT * FROM word_table", function (err, rows) {
+    if (err) {
+        throw err;
+    } else {
+        setSQLWord(rows);
+    }
+});
+
+/* Query for long_phrase_table */
+con.query("SELECT * FROM long_phrase_table", function (err, rows) {
+    if (err) {
+        throw err;
+    } else {
+        setSQLLong(rows);
+    }
+});
+/* Query for short_phrase_table */
+con.query("SELECT * FROM short_phrase_table", function (err, rows) {
+    if (err) {
+        throw err;
+    } else {
+        setSQLShort(rows);
+    }
+});
+
+
+
+
+
 
 
 
